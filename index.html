@@ -353,7 +353,7 @@
                 document.getElementById('btn-confirm-pix').style.display = 'inline-block';
             }
             else if (method === 'cartao') {
-    fetch('https://cardapio-infinitepay-f04mwxx.vercel.app/api/create-payment', {  // TROQUE PELO NOME EXATO DA SUA URL VERCEL
+    fetch('https://cardapio-infinitepay-f04mvwxob.vercel.app/', {  // TROQUE PELO NOME EXATO DA SUA URL VERCEL
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ total: currentTotal })
@@ -405,4 +405,5 @@
 </body>
 
 </html>
+
 
