@@ -1,27 +1,24 @@
 export default async function handler(req, res) {
-  // Headers CORS essenciais (para permitir a própria origem do Vercel)
-  const origin = req.headers.origin || '*';  // Use req.headers.origin para segurança futura
-  res.setHeader('Access-Control-Allow-Origin', origin);
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  // Headers CORS obrigatórios
+  res.setHeader('Access-Control-Allow-Origin', '*');  // Use '*' para teste; depois troque por sua URL exata
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Max-Age', '86400');  // Cache preflight por 24h
 
-  // Trata o preflight OPTIONS (obrigatório!)
+  // Trata o preflight OPTIONS (o navegador envia isso antes do POST)
   if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
+    return res.status(200).end();
   }
 
+  // Só aceita POST
   if (req.method !== 'POST') {
-    res.status(405).json({ error: 'Método não permitido' });
-    return;
+    return res.status(405).json({ error: 'Método não permitido' });
   }
 
   const { total } = req.body;
 
   if (!total || isNaN(total)) {
-    res.status(400).json({ error: 'Valor total inválido' });
-    return;
+    return res.status(400).json({ error: 'Valor total inválido' });
   }
 
   try {
@@ -45,18 +42,18 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      return res.status(response.status).json({ error: `InfinitePay error: ${response.status} - ${errorText}` });
+      return res.status(response.status).json({ error: `InfinitePay error ${response.status}: ${errorText}` });
     }
 
     const data = await response.json();
 
-    // Tente diferentes campos possíveis para o link (ajuste baseado no retorno real)
+    // Tente diferentes nomes possíveis para o link (baseado na doc InfinitePay)
     const paymentUrl = data.link || data.checkout_url || data.payment_url || data.url || data.checkoutLink || data.redirectUrl;
 
     if (paymentUrl) {
       return res.status(200).json({ url: paymentUrl });
     } else {
-      return res.status(500).json({ error: 'Link não encontrado na resposta. Resposta completa: ' + JSON.stringify(data) });
+      return res.status(500).json({ error: 'Link não encontrado. Resposta: ' + JSON.stringify(data) });
     }
   } catch (err) {
     return res.status(500).json({ error: 'Erro interno: ' + err.message });
