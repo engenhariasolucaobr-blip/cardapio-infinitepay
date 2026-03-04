@@ -353,11 +353,20 @@
                 document.getElementById('btn-confirm-pix').style.display = 'inline-block';
             }
             else if (method === 'cartao') {
-    fetch('https://cardapio-infinitepay-f04mvwxob.vercel.app/', {  // TROQUE PELO NOME EXATO DA SUA URL VERCEL
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ total: currentTotal })
-    })
+    const valor = currentTotal.toFixed(2).replace('.', ',');
+    
+    // Copia o valor para a área de transferência
+    navigator.clipboard.writeText(valor).then(() => {
+        alert(`Valor total copiado automaticamente: R$ ${valor}\n\nAgora siga esses passos rápidos:\n\n1. Clique OK para abrir o InfinitePay\n2. Faça login (você já está logado?)\n3. Vá em "Cobranças" → "Link de Pagamento" ou "Enviar cobrança"\n4. Cole o valor (já está copiado)\n5. Crie o link (permita até 12x no cartão)\n6. Copie o link gerado e envie para o cliente AGORA (WhatsApp, mensagem, etc.)\n\nO cliente clica no link e paga com cartão ou Pix.`);
+    }).catch(() => {
+        alert(`Valor total: R$ ${valor}\n(Copie manualmente acima)\n\nAbra o InfinitePay, cole esse valor e gere o link de pagamento para o cliente.`);
+    });
+
+    // Abre o site da InfinitePay diretamente
+    window.open("https://www.infinitepay.io/", "_blank");
+    
+    closePayment();
+})
     .then(res => {
         if (!res.ok) throw new Error('Erro no Vercel proxy: ' + res.status);
         return res.json();
@@ -405,5 +414,6 @@
 </body>
 
 </html>
+
 
 
