@@ -1,25 +1,30 @@
 export default async function handler(req, res) {
-  // Habilita CORS para qualquer origem (teste; depois restrinja se quiser)
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // Configura CORS para permitir qualquer origem (teste; depois restrinja para a sua URL)
+  res.setHeader('Access-Control-Allow-Origin', '*');  // ou troque por 'https://cardapio-infinitepay-f04mwxx.vercel.app' quando souber a URL exata
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  // Trata pré-voo CORS (OPTIONS)
+  // Trata o pré-voo OPTIONS (obrigatório para CORS POST)
   if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+    res.status(200).end();
+    return;
   }
 
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Método não permitido' });
+    res.status(405).json({ error: 'Método não permitido' });
+    return;
   }
 
   const { total } = req.body;
 
   if (!total || isNaN(total)) {
-    return res.status(400).json({ error: 'Valor total inválido' });
+    res.status(400).json({ error: 'Valor total inválido' });
+    return;
   }
 
   try {
+    console.log('Recebido total:', total);  // debug no Vercel logs
+
     const response = await fetch('https://api.infinitepay.io/invoices/public/checkout/links', {
       method: 'POST',
       headers: {
@@ -38,22 +43,25 @@ export default async function handler(req, res) {
       })
     });
 
+    console.log('Status da InfinitePay:', response.status);  // debug
+
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`InfinitePay retornou erro: ${response.status} - ${errorText}`);
+      throw new Error(`InfinitePay error ${response.status}: ${errorText}`);
     }
 
     const data = await response.json();
+    console.log('Resposta InfinitePay:', data);  // debug para ver o campo do link
 
-    // Ajuste o campo abaixo se o link vier em outro nome (veja logs do Vercel depois do teste)
-    const paymentUrl = data.link || data.checkout_url || data.payment_url || data.url;
+    const paymentUrl = data.link || data.checkout_url || data.payment_url || data.url || data.checkoutLink;
 
     if (paymentUrl) {
       res.status(200).json({ url: paymentUrl });
     } else {
-      res.status(500).json({ error: 'Link não encontrado na resposta da InfinitePay. Resposta completa: ' + JSON.stringify(data) });
+      res.status(500).json({ error: 'Link não encontrado. Resposta completa: ' + JSON.stringify(data) });
     }
   } catch (err) {
+    console.error('Erro completo:', err.message);
     res.status(500).json({ error: err.message });
   }
 }
