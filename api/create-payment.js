@@ -1,10 +1,12 @@
 export default async function handler(req, res) {
-  // Configura CORS para permitir qualquer origem (teste; depois restrinja para a sua URL)
-  res.setHeader('Access-Control-Allow-Origin', '*');  // ou troque por 'https://cardapio-infinitepay-f04mwxx.vercel.app' quando souber a URL exata
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  // Headers CORS essenciais (para permitir a própria origem do Vercel)
+  const origin = req.headers.origin || '*';  // Use req.headers.origin para segurança futura
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
 
-  // Trata o pré-voo OPTIONS (obrigatório para CORS POST)
+  // Trata o preflight OPTIONS (obrigatório!)
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
@@ -23,8 +25,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    console.log('Recebido total:', total);  // debug no Vercel logs
-
     const response = await fetch('https://api.infinitepay.io/invoices/public/checkout/links', {
       method: 'POST',
       headers: {
@@ -43,25 +43,22 @@ export default async function handler(req, res) {
       })
     });
 
-    console.log('Status da InfinitePay:', response.status);  // debug
-
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`InfinitePay error ${response.status}: ${errorText}`);
+      return res.status(response.status).json({ error: `InfinitePay error: ${response.status} - ${errorText}` });
     }
 
     const data = await response.json();
-    console.log('Resposta InfinitePay:', data);  // debug para ver o campo do link
 
-    const paymentUrl = data.link || data.checkout_url || data.payment_url || data.url || data.checkoutLink;
+    // Tente diferentes campos possíveis para o link (ajuste baseado no retorno real)
+    const paymentUrl = data.link || data.checkout_url || data.payment_url || data.url || data.checkoutLink || data.redirectUrl;
 
     if (paymentUrl) {
-      res.status(200).json({ url: paymentUrl });
+      return res.status(200).json({ url: paymentUrl });
     } else {
-      res.status(500).json({ error: 'Link não encontrado. Resposta completa: ' + JSON.stringify(data) });
+      return res.status(500).json({ error: 'Link não encontrado na resposta. Resposta completa: ' + JSON.stringify(data) });
     }
   } catch (err) {
-    console.error('Erro completo:', err.message);
-    res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: 'Erro interno: ' + err.message });
   }
 }
