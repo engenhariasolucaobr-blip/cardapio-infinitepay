@@ -353,30 +353,30 @@
                 document.getElementById('btn-confirm-pix').style.display = 'inline-block';
             }
             else if (method === 'cartao') {
-                fetch('https://SEU-PROJETO.vercel.app/api/create-payment', {  // ← TROQUE PELA SUA URL DO VERCEL DEPOIS DO DEPLOY
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ total: currentTotal })
-                })
-                .then(res => {
-                    if (!res.ok) throw new Error('Erro no Vercel: ' + res.status);
-                    return res.json();
-                })
-                .then(data => {
-                    if (data.url) {
-                        alert('Redirecionando para pagamento com cartão via InfinitePay!');
-                        window.open(data.url, '_blank');
-                        closePayment();
-                    } else {
-                        alert('Erro: ' + (data.error || 'Link não gerado. Veja console F12'));
-                        console.log('Resposta:', data);
-                    }
-                })
-                .catch(err => {
-                    alert('Falha ao gerar pagamento: ' + err.message + '\nVerifique console (F12)');
-                    console.error(err);
-                });
-            }
+    fetch('https://cardapio-infinitepay-f04mvwxob.vercel.app/', {  // TROQUE PELO NOME EXATO DA SUA URL VERCEL
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ total: currentTotal })
+    })
+    .then(res => {
+        if (!res.ok) throw new Error('Erro no Vercel proxy: ' + res.status);
+        return res.json();
+    })
+    .then(data => {
+        if (data.url) {
+            alert('Redirecionando para pagamento seguro com cartão via InfinitePay!');
+            window.open(data.url, '_blank');
+            closePayment();
+        } else {
+            alert('Erro ao gerar link: ' + (data.error || 'Tente novamente. Veja console F12'));
+            console.log('Resposta do Vercel:', data);
+        }
+    })
+    .catch(err => {
+        alert('Falha ao conectar com o pagamento: ' + err.message + '\nVerifique console (F12)');
+        console.error(err);
+    });
+}
         }
 
         function confirmPix() {
@@ -403,4 +403,5 @@
         init();
     </script>
 </body>
+
 </html>
