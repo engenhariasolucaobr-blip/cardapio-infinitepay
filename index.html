@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cardápio Digital - Pagamento InfinitePay + PIX</title>
+    <link href="https://fonts.googleapis.com/css2?family=Titan+One&family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --vermelho: #D62300;
+            --amarelo: #FFB612;
+            --marrom: #502314;
+            --creme: #F5EBDC;
+            --branco: #FFFFFF;
+            --shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; scroll-behavior: smooth; }
+        body { background-color: var(--creme); font-family: 'Open Sans', sans-serif; color: var(--marrom); }
+        h1, h2, h3, .price { font-family: 'Titan One', cursive; }
+
+        header { background-color: var(--vermelho); padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .logo-area { display: flex; align-items: center; gap: 15px; }
+        .logo-img { height: 55px; filter: drop-shadow(2px 2px 0px rgba(0,0,0,0.1)); }
+        header h1 { color: var(--amarelo); font-size: 1.4rem; letter-spacing: 1px; }
+        .cart-btn { background: var(--amarelo); padding: 12px 25px; border-radius: 50px; cursor: pointer; font-weight: bold; transition: 0.3s; display: flex; align-items: center; gap: 10px; border: 2px solid transparent; }
+
+        .hero { height: 350px; background: linear-gradient(rgba(80, 35, 20, 0.5), rgba(80, 35, 20, 0.5)), url('https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=1500'); background-size: cover; background-position: center; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; text-align: center; padding: 20px; }
+        .hero h2 { font-size: 3.5rem; color: var(--amarelo); text-shadow: 3px 3px var(--vermelho); margin-bottom: 10px; }
+
+        .container { padding: 40px 5%; max-width: 1400px; margin: auto; }
+        .category-title { font-size: 2.2rem; color: var(--vermelho); margin: 50px 0 30px; display: flex; align-items: center; gap: 20px; }
+        .category-title::after { content: ''; flex: 1; height: 5px; background: var(--amarelo); border-radius: 10px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; }
+
+        .card { background: white; border-radius: 25px; padding: 20px; display: flex; flex-direction: column; transition: 0.4s; box-shadow: var(--shadow); text-align: center; position: relative; }
+        .card:hover { transform: translateY(-12px); }
+        .product-img { width: 100%; height: 180px; object-fit: contain; margin-bottom: 15px; background: #f8f8f8; }
+        .price { font-size: 1.8rem; color: var(--vermelho); margin: 10px 0; }
+        .btn-add { background: var(--marrom); color: white; border: none; padding: 15px; border-radius: 12px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.3s; }
+        .btn-add:hover { background: var(--vermelho); }
+
+        .info-icon { position: absolute; top: 10px; right: 10px; background: var(--amarelo); color: var(--marrom); width: 26px; height: 26px; border-radius: 50%; text-align: center; line-height: 26px; font-size: 1.1rem; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 5; }
+
+        #ingredientes-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2500; justify-content: center; align-items: center; }
+        #ingredientes-modal.active { display: flex; }
+        .modal-content { background: white; border-radius: 20px; padding: 30px; max-width: 500px; width: 90%; text-align: center; position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
+        .close-modal { position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 2.5rem; cursor: pointer; color: var(--marrom); }
+
+        .sidebar { position: fixed; right: -450px; top: 0; width: 450px; height: 100%; background: white; z-index: 2000; transition: 0.5s; display: flex; flex-direction: column; box-shadow: -10px 0 30px rgba(0,0,0,0.1); }
+        .sidebar.active { right: 0; }
+        .cart-header { background: var(--marrom); color: white; padding: 25px; display: flex; justify-content: space-between; align-items: center; }
+        #cart-items { flex: 1; overflow-y: auto; padding: 20px; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
+        .cart-item-name { flex: 1; font-weight: bold; }
+        .cart-item-qty { display: flex; align-items: center; gap: 8px; min-width: 110px; }
+        .qty-btn { background: var(--amarelo); color: var(--marrom); border: none; width: 28px; height: 28px; border-radius: 6px; font-size: 1.1rem; cursor: pointer; font-weight: bold; }
+        .qty-btn:hover { background: #ffca3a; }
+        .qty-number { min-width: 30px; text-align: center; font-weight: bold; }
+        .cart-item-subtotal { font-weight: bold; color: var(--vermelho); min-width: 90px; text-align: right; }
+        .remove-btn { background: none; border: none; color: var(--vermelho); font-size: 1.4rem; cursor: pointer; padding: 0 8px; }
+        .remove-btn:hover { color: #b51d00; transform: scale(1.2); }
+
+        .cart-footer { padding: 25px; background: var(--creme); border-top: 2px solid var(--amarelo); }
+        .btn-finish { background: #28a745; color: white; border: none; width: 100%; padding: 20px; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 1.2rem; }
+
+        #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; z-index: 1500; backdrop-filter: blur(3px); }
+        #overlay.active { display: block; }
+
+        #payment-modal { 
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: white; z-index: 3000; padding: 30px; border-radius: 25px; width: 90%; max-width: 420px;
+            text-align: center; display: none; box-shadow: 0 20px 50px rgba(0,0,0,0.3); border: 3px solid var(--amarelo);
+        }
+        #payment-modal.active { display: block; }
+
+        .payment-btn { 
+            width: 100%; padding: 18px; margin: 10px 0; border: none; border-radius: 12px; 
+            font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.2s;
+        }
+        .btn-pix     { background: var(--amarelo);    color: var(--marrom); }
+        .btn-cartao  { background: var(--vermelho);   color: white; }
+        .payment-btn:hover { opacity: 0.9; transform: translateY(-2px); }
+
+        .qr-placeholder { background: white; width: 200px; height: 200px; margin: 20px auto; display: flex; align-items: center; justify-content: center; border: 1px solid #eee; }
+        .pix-code-box { background: #f8f8f8; padding: 15px; border-radius: 10px; border: 1px dashed var(--marrom); margin: 15px 0; }
+        #pix-payload { font-size: 0.7rem; word-break: break-all; color: #666; font-family: monospace; display: block; margin-bottom: 10px; cursor: text; }
+        .btn-copy { background: var(--amarelo); border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; color: var(--marrom); }
+
+        @media (max-width: 768px) {
+            .grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
+            .hero { height: 250px; }
+            .hero h2 { font-size: 2.5rem; }
+            .sidebar { width: 100%; right: 0; transform: translateX(100%); transition: transform 0.4s ease; }
+            .sidebar.active { transform: translateX(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-area">
+            <img src="https://i.imgur.com/naAX7ib.jpeg" class="logo-img">
+            <h1>OFFICIAL MENU</h1>
+        </div>
+        <div class="cart-btn" onclick="toggleCart()">
+            <span>🛒 MEU PEDIDO</span>
+            <span id="cart-count" style="background:var(--vermelho); color:white; padding:2px 8px; border-radius:50px;">0</span>
+        </div>
+    </header>
+
+    <section class="hero">
+        <h2>SABOR QUE CONQUISTA</h2>
+        <p>Grelhado no fogo desde 1954</p>
+    </section>
+
+    <main class="container" id="menu-container"></main>
+
+    <div id="overlay" onclick="toggleCart()"></div>
+
+    <div id="payment-modal">
+        <h3 style="color:var(--marrom); margin-bottom:10px;">Como você quer pagar?</h3>
+        <p style="color: var(--vermelho); font-weight: bold; font-size: 1.5rem; margin: 15px 0;" id="modal-total">R$ 0,00</p>
+
+        <button class="payment-btn btn-pix" onclick="selectPayment('pix')">PIX (QR Code / Copia e Cola)</button>
+        <button class="payment-btn btn-cartao" onclick="selectPayment('cartao')">Cartão de Crédito / Débito</button>
+
+        <div id="pix-area" style="display:none; margin-top:25px;">
+            <p style="font-size:0.9rem; margin:10px 0;">Favorecido: <strong>SOLUÇÕES GOURMET LTDA</strong></p>
+            <div class="qr-placeholder">
+                <img id="qr-img" src="" alt="QR Code PIX">
+            </div>
+            <div class="pix-code-box">
+                <span id="pix-payload">Gerando código...</span>
+                <button class="btn-copy" onclick="copyPix()">COPIAR CÓDIGO PIX</button>
+            </div>
+        </div>
+
+        <div style="margin-top:25px; display:flex; gap:12px;">
+            <button id="btn-confirm-pix" style="flex:1; background:#28a745; color:white; padding:16px; border:none; border-radius:12px; font-weight:bold; cursor:pointer; display:none;" onclick="confirmPix()">
+                JÁ PAGUEI, FINALIZAR
+            </button>
+            <button style="flex:1; background:#ccc; color:var(--marrom); padding:16px; border:none; border-radius:12px; font-weight:bold; cursor:pointer;" onclick="closePayment()">
+                Cancelar
+            </button>
+        </div>
+    </div>
+
+    <div id="ingredientes-modal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeIngredientes()">×</button>
+            <h2 id="modal-nome" style="color:var(--vermelho); margin-bottom:15px;"></h2>
+            <p id="modal-desc" style="font-size:1.1rem; color:var(--marrom); white-space:pre-wrap; text-align:left; line-height:1.5;"></p>
+            <button onclick="closeIngredientes()" style="margin-top:25px; background:var(--amarelo); color:var(--marrom); border:none; padding:12px 40px; border-radius:12px; font-weight:bold; cursor:pointer; font-size:1rem;">FECHAR</button>
+        </div>
+    </div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="cart-header">
+            <h3>Seu Pedido</h3>
+            <button onclick="toggleCart()" style="background:none; border:none; color:white; font-size:2rem; cursor:pointer;">×</button>
+        </div>
+        <div id="cart-items"></div>
+        <div class="cart-footer">
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px; font-size:1.3rem;">
+                <strong>Total:</strong>
+                <strong id="total-price" style="color:var(--vermelho);">R$ 0,00</strong>
+            </div>
+            <button class="btn-finish" onclick="finish()">FINALIZAR COMPRA</button>
+        </div>
+    </aside>
+
+    <script>
+        const imgBase = "https://www.burgerking.com.br/sites/default/files/";
+        const fallbackBase = "https://via.placeholder.com/280x180?text=";
+
+        const menuData = [
+            { cat: "🍔 Clássicos de Carne", itens: [
+                { n: "Whopper", p: 36.20, img: "https://i.imgur.com/3XytFaJ.jpeg", desc: "Pão com gergelim, maionese, alface, tomate, cebola, ketchup, picles, queijo derretido e um suculento hambúrguer de pura carne bovina grelhado no fogo." },
+                { n: "Whopper Furioso", p: 41.70, img: "https://i.imgur.com/fcIOhBS.jpeg", desc: "Pão com gergelim, hambúrguer de carne, cheddar fatiado, bacon, alface, tomate, maionese, pimenta-jalapeño, onion rings e molho furioso à base de mostarda e pimenta." },
+                { n: "Whopper Duplo", p: 43.90, img: "https://i.imgur.com/z2qH8Cz.jpeg", desc: "Pão com gergelim, maionese, alface, tomate, cebola, ketchup, picles, queijo derretido e DOIS hambúrgueres de pura carne bovina grelhados no fogo." },
+                { n: "Mega Stacker 2.0", p: 42.80, img: "https://i.imgur.com/uHzD9nQ.jpeg", desc: "Pão, duas carnes grelhadas no fogo, cheddar fatiado, bacon crocante e molho Stacker cremoso com sabor defumado." },
+                { n: "Mega Stacker 4.0", p: 53.80, img: "https://i.imgur.com/aS4S65x.jpeg", desc: "Pão, QUATRO carnes grelhadas no fogo, cheddar fatiado, bacon crocante e molho Stacker cremoso com sabor defumado." },
+                { n: "Big King", p: 27.40, img: "https://i.imgur.com/68GwPxv.jpeg", desc: "Pão com gergelim, dois hambúrgueres de carne bovina, queijo derretido, alface, cebola, picles e molho Big King especial (tipo thousand island)." },
+                { n: "Cheeseburger Duplo", p: 21.90, img: "https://i.imgur.com/QyMTuhN.jpeg", desc: "Pão com gergelim, dois hambúrgueres de carne bovina, duas fatias de queijo derretido, picles, ketchup e mostarda." },
+                { n: "Cheddar Duplo", p: 25.20, img: "https://i.imgur.com/Ij6p6KF.jpeg", desc: "Pão com gergelim, dois hambúrgueres de carne bovina, duas fatias de cheddar derretido, ketchup e mostarda." },
+                { n: "Rodeio Duplo", p: 24.10, img: "https://i.imgur.com/4yCU80D.jpeg", desc: "Pão com gergelim, dois hambúrgueres grelhados, cheddar fatiado, onion rings, molho barbecue e maionese BK." }
+            ]},
+            { cat: "🍗 Frango e Veggie", itens: [
+                { n: "Chicken Crisp", p: 25.20, img: "https://i.imgur.com/YzkXG5I.jpeg", desc: "Pão, peito de frango empanado e crocante, alface e maionese (versão clássica crispy)." },
+                { n: "Whopper de Frango", p: 31.80, img: "https://i.imgur.com/AUU5axI.jpeg", desc: "Pão com gergelim, hambúrguer de frango, maionese, alface, tomate, cebola, ketchup, picles e queijo derretido." },
+                { n: "BK Fish", p: 32.90, img: "https://i.imgur.com/Owmr3S0.jpeg", desc: "Pão com gergelim, filé de peixe empanado, molho tartar, alface e queijo." },
+                { n: "Whopper Vegetal", p: 37.30, img: "https://i.imgur.com/SAxRMqF.jpeg", desc: "Pão com gergelim, hambúrguer vegetal à base de plantas, maionese, alface, tomate, cebola, ketchup, picles e queijo derretido." }
+            ]},
+            { cat: "🍟 Acompanhamentos", itens: [
+                { n: "Batata Média", p: 15.30, img: imgBase + "2022-08/BatataMedia_0.png" },
+                { n: "Batata Suprema", p: 20.80, img: imgBase + "2022-08/BatataSuprema_0.png" },
+                { n: "Onion Rings M", p: 16.40, img: imgBase + "2022-08/OnionRingsMedia_0.png" },
+                { n: "BK Chicken (10 un)", p: 20.80, img: imgBase + "2022-08/BKChicken10_0.png" },
+                { n: "Bucket de Batata", p: 27.40, img: imgBase + "2022-08/BaldeBatata_0.png" }
+            ]},
+            { cat: "🥤 Bebidas", itens: [
+                { n: "Free Refill", p: 16.40, img: imgBase + "2022-08/FreeRefill_0.png" },
+                { n: "Suco Natural One", p: 13.10, img: imgBase + "2022-08/SucoLaranja_0.png" },
+                { n: "Água Mineral", p: 6.60, img: fallbackBase + "Água+Mineral" }
+            ]},
+            { cat: "🍦 Sobremesas", itens: [
+                { n: "Milkshake Chocolate", p: 21.90, img: imgBase + "2022-08/ShakeChocolate_0.png" },
+                { n: "BK Mix Oreo", p: 14.20, img: imgBase + "2022-08/BKMixOreo_0.png" },
+                { n: "Casquinha Mista", p: 4.40, img: imgBase + "2022-08/CasquinhaMista_0.png" }
+            ]}
+        ];
+
+        let cart = [];
+        let currentTotal = 0;
+
+        function init() {
+            const container = document.getElementById('menu-container');
+            menuData.forEach(section => {
+                const sectionDiv = document.createElement('div');
+                sectionDiv.innerHTML = `<h2 class="category-title">${section.cat}</h2><div class="grid"></div>`;
+                const grid = sectionDiv.querySelector('.grid');
+                section.itens.forEach(item => {
+                    const infoIcon = item.desc ? `
+                        <div class="info-icon" onclick="showIngredientes('${item.n.replace(/'/g, "\\'")}', '${item.desc.replace(/'/g, "\\'")}')">
+                            i
+                        </div>
+                    ` : '';
+
+                    grid.innerHTML += `
+                        <div class="card">
+                            ${infoIcon}
+                            <img src="${item.img}" class="product-img" loading="lazy" onerror="this.src='${fallbackBase + encodeURIComponent(item.n)}'">
+                            <h3>${item.n}</h3>
+                            <div class="price">R$ ${item.p.toFixed(2).replace('.',',')}</div>
+                            <button class="btn-add" onclick="addToCart('${item.n.replace(/'/g, "\\'")}', ${item.p})">ADICIONAR</button>
+                        </div>`;
+                });
+                container.appendChild(sectionDiv);
+            });
+        }
+
+        function addToCart(nome, preco) {
+            const existing = cart.find(item => item.nome === nome);
+            if (existing) existing.quantidade += 1;
+            else cart.push({ nome, preco, quantidade: 1 });
+            updateCart();
+        }
+
+        function changeQuantity(index, delta) {
+            cart[index].quantidade += delta;
+            if (cart[index].quantidade <= 0) cart.splice(index, 1);
+            updateCart();
+        }
+
+        function updateCart() {
+            let totalItems = cart.reduce((sum, item) => sum + item.quantidade, 0);
+            document.getElementById('cart-count').innerText = totalItems;
+
+            const itemsDiv = document.getElementById('cart-items');
+            itemsDiv.innerHTML = "";
+            let total = 0;
+
+            cart.forEach((item, idx) => {
+                const subtotal = item.preco * item.quantidade;
+                total += subtotal;
+
+                itemsDiv.innerHTML += `
+                    <div class="cart-item">
+                        <div class="cart-item-name">${item.nome}</div>
+                        <div class="cart-item-qty">
+                            <button class="qty-btn" onclick="changeQuantity(${idx}, -1)">−</button>
+                            <span class="qty-number">${item.quantidade}</span>
+                            <button class="qty-btn" onclick="changeQuantity(${idx}, 1)">+</button>
+                        </div>
+                        <div class="cart-item-subtotal">R$ ${subtotal.toFixed(2).replace('.', ',')}</div>
+                        <button class="remove-btn" onclick="changeQuantity(${idx}, -999)">✕</button>
+                    </div>`;
+            });
+
+            document.getElementById('total-price').innerText = `R$ ${total.toFixed(2).replace('.', ',')}`;
+        }
+
+        function showIngredientes(nome, desc) {
+            document.getElementById('modal-nome').innerText = nome;
+            document.getElementById('modal-desc').innerText = desc;
+            document.getElementById('ingredientes-modal').classList.add('active');
+        }
+
+        function closeIngredientes() {
+            document.getElementById('ingredientes-modal').classList.remove('active');
+        }
+
+        function toggleCart() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('overlay').classList.toggle('active');
+        }
+
+        function getCRC16(str) {
+            let crc = 0xFFFF;
+            for (let i = 0; i < str.length; i++) {
+                let byte = str.charCodeAt(i) & 0xFF;
+                crc ^= (byte << 8);
+                for (let j = 0; j < 8; j++) {
+                    if (crc & 0x8000) {
+                        crc = ((crc << 1) & 0xFFFF) ^ 0x1021;
+                    } else {
+                        crc = (crc << 1) & 0xFFFF;
+                    }
+                }
+            }
+            return crc.toString(16).toUpperCase().padStart(4, '0');
+        }
+
+        function generatePix(valor) {
+            const chave = "62993405000125";
+            const nome = "SOLUCOES GOURMET LTDA";
+            const cidade = "BRASILIA";
+            const valStr = valor.toFixed(2);
+            const valLen = valStr.length.toString().padStart(2, '0');
+
+            const keyPart = "0014BR.GOV.BCB.PIX01" + chave.length.toString().padStart(2,'0') + chave;
+            const merchantLen = keyPart.length.toString().padStart(2,'0');
+            const merchant = "26" + merchantLen + keyPart;
+
+            let payload = "000201" + merchant + "52040000" + "5303986" + "54" + valLen + valStr + "5802BR" +
+                          "59" + nome.length.toString().padStart(2,'0') + nome +
+                          "60" + cidade.length.toString().padStart(2,'0') + cidade +
+                          "62070503***" + "6304";
+
+            const crc = getCRC16(payload);
+            return payload + crc;
+        }
+
+        function finish() {
+            if (cart.length === 0) return alert("Carrinho vazio!");
+            currentTotal = cart.reduce((acc, it) => acc + (it.preco * it.quantidade), 0);
+
+            document.getElementById('modal-total').innerText = `R$ ${currentTotal.toFixed(2).replace('.',',')}`;
+            document.getElementById('payment-modal').classList.add('active');
+            document.getElementById('overlay').classList.add('active');
+
+            document.getElementById('pix-area').style.display = 'none';
+            document.getElementById('btn-confirm-pix').style.display = 'none';
+        }
+
+        function selectPayment(method) {
+            if (method === 'pix') {
+                const pix = generatePix(currentTotal);
+                document.getElementById('pix-payload').innerText = pix;
+                document.getElementById('qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(pix)}`;
+
+                document.getElementById('pix-area').style.display = 'block';
+                document.getElementById('btn-confirm-pix').style.display = 'inline-block';
+            }
+            else if (method === 'cartao') {
+                fetch('https://SEU-PROJETO.vercel.app/api/create-payment', {  // ← TROQUE PELA SUA URL DO VERCEL DEPOIS DO DEPLOY
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ total: currentTotal })
+                })
+                .then(res => {
+                    if (!res.ok) throw new Error('Erro no Vercel: ' + res.status);
+                    return res.json();
+                })
+                .then(data => {
+                    if (data.url) {
+                        alert('Redirecionando para pagamento com cartão via InfinitePay!');
+                        window.open(data.url, '_blank');
+                        closePayment();
+                    } else {
+                        alert('Erro: ' + (data.error || 'Link não gerado. Veja console F12'));
+                        console.log('Resposta:', data);
+                    }
+                })
+                .catch(err => {
+                    alert('Falha ao gerar pagamento: ' + err.message + '\nVerifique console (F12)');
+                    console.error(err);
+                });
+            }
+        }
+
+        function confirmPix() {
+            alert("✔ Pagamento em processamento!\nSeu pedido já está na chapa 🔥\nConfirmação por e-mail em breve (verifique SPAM).");
+            cart = []; updateCart();
+            closePayment();
+            setTimeout(() => window.open("https://www.burgerking.com.br", "_blank"), 1200);
+        }
+
+        function closePayment() {
+            document.getElementById('payment-modal').classList.remove('active');
+            document.getElementById('overlay').classList.remove('active');
+        }
+
+        function copyPix() {
+            const text = document.getElementById('pix-payload').innerText.trim();
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(() => alert("✅ Código PIX copiado!"));
+            } else {
+                alert("Selecione o código abaixo e copie manualmente:\n\n" + text);
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>
